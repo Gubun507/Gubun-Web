@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mercado — Gubun MMORPG</title>
+  <meta name="description" content="Mercado P2P de Gubun. Compra y vende personajes, armas y objetos con otros jugadores.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <div class="bg-layer"></div>
+  <div class="orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar" id="navbar">
+    <a class="nav-brand" href="index.html">
+      <span class="brand-icon">⚔️</span>
+      <span class="brand-name">GUBUN</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="index.html#features">Características</a>
+      <a href="index.html#roadmap">Roadmap</a>
+    </div>
+
+    <button class="btn-play btn-sm" onclick="window.location.href='juego.html'">
+      <span>🎮</span> Jugar
+    </button>
+  </nav>
+
+  <!-- ── MARKET ── -->
+  <div class="market-wrap">
+    <a href="index.html" class="back-link">← Volver al inicio</a>
+
+    <div class="market-hero">
+      <div class="market-hero-text">
+        <div class="section-tag tag-gold">
+          <span class="tag-dot"></span>
+          Mercado P2P
+        </div>
+        <h1>Mercado de Gubun</h1>
+        <p>Compra y vende personajes y objetos directamente con otros jugadores</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+        <div style="font-size:0.8rem;color:var(--text-muted)">Tu balance</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;color:var(--gold-lt)" id="userGold">🪙 2,500 oro</div>
+        <button class="btn-outline btn-sm" style="font-size:0.75rem">+ Vender ítem</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="market-controls">
+      <div class="input-wrap">
+        <span class="input-icon">🔍</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Buscar personaje o ítem...">
+      </div>
+
+      <select class="filter-select" id="filterRarity">
+        <option value="all">Todas las rarezas</option>
+        <option value="common">Común</option>
+        <option value="rare">Raro</option>
+        <option value="epic">Épico</option>
+        <option value="legendary">Legendario</option>
+      </select>
+
+      <select class="filter-select" id="filterType">
+        <option value="all">Todos los tipos</option>
+        <option value="personaje">Personaje</option>
+        <option value="arma">Arma</option>
+        <option value="consumible">Consumible</option>
+        <option value="objeto">Objeto</option>
+      </select>
+
+      <select class="filter-select" id="sortBy">
+        <option value="default">Ordenar por...</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="nombre">Nombre A–Z</option>
+      </select>
+    </div>
+
+    <!-- Stats bar -->
+    <div style="display:flex;gap:2rem;margin-bottom:2rem;flex-wrap:wrap">
+      <div style="font-size:0.8rem;color:var(--text-muted)">
+        <span id="itemCount" style="color:var(--primary-lt);font-weight:700">0</span> ítems disponibles
+      </div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">
+        Precio más bajo: <span id="minPrice" style="color:var(--gold-lt);font-weight:700">—</span> oro
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="market-grid" id="marketGrid"></div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand nav-brand">
+        <span class="brand-icon">⚔️</span>
+        <span class="brand-name" style="font-size:1.2rem">GUBUN</span>
+      </div>
+      <p class="footer-desc">Mercado P2P · Early Access</p>
+      <nav class="footer-links">
+        <a href="index.html">Inicio</a>
+        <a href="juego.html">Jugar</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

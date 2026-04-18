@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gubun MMORPG — Mundo Abierto Pixel Art</title>
+  <meta name="description" content="Gubun: MMORPG de mundo abierto pixel-art. Explora, construye bases, combate enemigos y comercia con otros jugadores en un universo vivo.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <!-- Layered background -->
+  <div class="bg-layer"></div>
+  <div class="orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <span class="brand-icon">⚔️</span>
+      <span class="brand-name">GUBUN</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="#features">Características</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="mercado.html">🛒 Mercado</a>
+    </div>
+
+    <button class="btn-play btn-sm" onclick="entrarJuego()">
+      <span>🎮</span> Jugar
+    </button>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <main>
+    <section class="hero" id="home">
+
+      <!-- Left: text -->
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          Early Access · Solo 10 jugadores
+        </div>
+
+        <h1 class="hero-title">
+          <span class="line-small">El mundo de</span>
+          <span class="line-main">GUBUN</span>
+          <span class="line-small">Te espera</span>
+        </h1>
+
+        <p class="hero-sub">
+          MMORPG de mundo abierto pixel-art. Explora territorios infinitos, construye tu base donde quieras, 
+          combate enemigos y comercia personajes con otros jugadores en un universo vivo.
+        </p>
+
+        <div class="hero-cta">
+          <button class="btn-play" id="btnMain" onclick="entrarJuego()">
+            <span class="btn-play-glow"></span>
+            <span>🎮</span> Entrar al Juego
+          </button>
+          <a href="mercado.html" class="btn-outline">
+            <span>🛒</span> Ver Mercado
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="h-stat">
+            <span class="h-stat-val">10</span>
+            <span class="h-stat-lbl">Jugadores</span>
+          </div>
+          <div class="h-divider"></div>
+          <div class="h-stat">
+            <span class="h-stat-val">∞</span>
+            <span class="h-stat-lbl">Mundo Abierto</span>
+          </div>
+          <div class="h-divider"></div>
+          <div class="h-stat">
+            <span class="h-stat-val">P2P</span>
+            <span class="h-stat-lbl">Mercado Real</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: game preview -->
+      <div class="hero-visual">
+        <div class="game-frame">
+          <div class="frame-ring ring-1"></div>
+          <div class="frame-ring ring-2"></div>
+
+          <div class="game-screen">
+            <div class="screen-grid"></div>
+            <div class="screen-ground"></div>
+
+            <!-- Stars -->
+            <div class="screen-stars" id="stars"></div>
+
+            <!-- HUD -->
+            <div class="screen-hud">
+              <div class="hud-left">
+                <div class="hud-lbl">HP</div>
+                <div class="hud-bar hud-hp">
+                  <div class="hud-bar-bg"></div>
+                  <div class="hud-bar-fill"></div>
+                </div>
+                <div class="hud-lbl">MP</div>
+                <div class="hud-bar hud-mp">
+                  <div class="hud-bar-bg"></div>
+                  <div class="hud-bar-fill"></div>
+                </div>
+              </div>
+              <div class="hud-right">
+                <div class="hud-coins">🪙 1,240 oro</div>
+              </div>
+            </div>
+
+            <!-- Characters -->
+            <div class="screen-chars">
+              <div class="char">🧙</div>
+              <div class="char">⚔️</div>
+              <div class="char">🏰</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES ── -->
+    <section class="features-section" id="features">
+      <div class="section-wrap">
+        <div class="features-header">
+          <div class="section-tag tag-purple">
+            <span class="tag-dot"></span>
+            Características
+          </div>
+          <h2 class="section-title">¿Qué hace único a Gubun?</h2>
+          <p class="section-sub">Un mundo diseñado para la aventura sin límites</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">🌍</span>
+            <h3>Mundo Abierto Total</h3>
+            <p>Explora un vasto universo pixel-art sin restricciones. Cada rincón esconde secretos, recursos raros y peligros mortales.</p>
+          </div>
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">🏗️</span>
+            <h3>Construcción Libre</h3>
+            <p>Planta tu base en cualquier coordenada del mundo. Tu castillo, tu fortaleza, tus reglas. Defiéndela o conquista las demás.</p>
+          </div>
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">⚔️</span>
+            <h3>Combate Dinámico</h3>
+            <p>Enfrenta oleadas de enemigos y a otros jugadores. El sistema de combate mezcla reacción, estrategia y habilidades únicas.</p>
+          </div>
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">🛒</span>
+            <h3>Mercado P2P Real</h3>
+            <p>Compra y vende personajes y objetos directamente entre jugadores. La economía la controlan los usuarios, no el sistema.</p>
+          </div>
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">🧙</span>
+            <h3>Personajes Únicos</h3>
+            <p>Cada personaje tiene estadísticas, habilidades y rareza propias. Colecciona, entrena y vende los más poderosos.</p>
+          </div>
+          <div class="feat-card" data-anim>
+            <span class="feat-icon">🌐</span>
+            <h3>Multijugador Real-time</h3>
+            <p>WebSocket en tiempo real para que sientas el mundo vivo. Otros jugadores, eventos globales y movimiento sincronizado.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ROADMAP ── -->
+    <section class="roadmap-section" id="roadmap">
+      <div class="section-wrap">
+        <div class="roadmap-grid">
+
+          <div class="roadmap-text">
+            <div class="section-tag tag-gold">
+              <span class="tag-dot"></span>
+              En desarrollo
+            </div>
+            <h2 class="section-title">Sé parte desde el principio</h2>
+            <p class="section-sub">
+              Gubun está en desarrollo activo. Como jugador Early Access, 
+              tu feedback moldea el juego. Solo <strong style="color:var(--gold-lt)">10 plazas</strong> disponibles.
+            </p>
+            <button class="btn-play" onclick="entrarJuego()" style="margin-top:2rem;">
+              <span class="btn-play-glow"></span>
+              <span>🚀</span> Unirse Ahora
+            </button>
+          </div>
+
+          <div class="roadmap-list">
+            <div class="roadmap-item done">
+              <div class="rd-dot"></div>
+              <div class="rd-info">
+                <strong>✅ Fase 1 — Base Web</strong>
+                <span>Estructura del proyecto, frontend/backend separado, página principal</span>
+              </div>
+            </div>
+            <div class="roadmap-item active">
+              <div class="rd-dot"></div>
+              <div class="rd-info">
+                <strong>⚡ Fase 2 — Motor de Juego</strong>
+                <span>Canvas 2D pixel-art, movimiento de personajes, lógica de combate básica</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="rd-dot"></div>
+              <div class="rd-info">
+                <strong>Fase 3 — Multijugador</strong>
+                <span>WebSockets en Render, sincronización de jugadores en tiempo real</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="rd-dot"></div>
+              <div class="rd-info">
+                <strong>Fase 4 — Mercado P2P</strong>
+                <span>Sistema de compra/venta entre jugadores con economía real del juego</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="rd-dot"></div>
+              <div class="rd-info">
+                <strong>Fase 5 — Lanzamiento</strong>
+                <span>Beta pública, sistema de cuentas, temporadas y recompensas</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand nav-brand">
+        <span class="brand-icon">⚔️</span>
+        <span class="brand-name" style="font-size:1.2rem">GUBUN</span>
+      </div>
+      <p class="footer-desc">MMORPG de mundo abierto pixel-art · Early Access · En desarrollo activo</p>
+      <nav class="footer-links">
+        <a href="mercado.html">Mercado</a>
+        <a href="juego.html">Jugar</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

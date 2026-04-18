@@ -1,0 +1,190 @@
+# GUBUN MMORPG - DOCUMENTACIÓN INICIAL
+
+## 📌 VISIÓN GENERAL
+
+Gubun es un MMORPG 2D basado en navegador (HTML, CSS, JavaScript), con estilo visual pixel-art y perspectiva top-down similar a Pokémon.
+
+El juego permitirá:
+
+* Movimiento libre en mundo abierto
+* Construcción de bases en cualquier zona
+* Combate con sistema de targeting (selección + aimbot)
+* Mercado integrado con personajes transferibles entre cuentas
+
+El proyecto está diseñado para escalar desde un prototipo (Early Access de 10 jugadores) hasta un sistema multiplayer completo.
+
+---
+
+## 🧠 ARQUITECTURA GENERAL
+
+El proyecto está dividido en dos partes principales:
+
+### 1. FRONTEND (Cliente)
+
+* Página web principal
+* Cliente del juego (canvas HTML5)
+* Interfaz de usuario
+* Lógica de renderizado y control del jugador
+
+### 2. BACKEND (FUTURO - Render)
+
+* Servidor Node.js
+* Comunicación en tiempo real (WebSocket)
+* Gestión de jugadores
+* Sistema de mercado y cuentas
+
+---
+
+## 📁 ESTRUCTURA DEL PROYECTO
+
+Gubun/
+
+├── frontend/
+│   ├── index.html
+│   ├── juego.html
+│
+│   ├── css/
+│   │   └── styles.css
+│
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── game/
+│   │   │   ├── engine.js
+│   │   │   ├── player.js
+│   │   │   ├── input.js
+│   │   │   ├── world.js
+│   │   │   └── combat.js
+│
+│   ├── assets/
+│   │   ├── sprites/
+│   │   └── tiles/
+│
+│   └── docs/
+│       └── CHANGELOG.md
+
+---
+
+## 🎮 DISEÑO DEL JUEGO
+
+### 🌍 Mundo
+
+* Mapa 2D que ocupa toda la pantalla (no tipo Mario)
+* Estilo Pokémon (cámara fija sobre el jugador)
+* Zonas:
+
+  * Bosque
+  * Nieve
+  * Pradera
+* Construcción libre en cualquier zona
+
+### 🧍 Jugador
+
+* Sprite pixel-art
+* 4 direcciones:
+
+  * Arriba
+  * Abajo
+  * Izquierda
+  * Derecha
+* Movimiento con teclas WASD
+
+### ⚔️ Combate
+
+Sistema basado en selección de objetivo:
+
+1. Click izquierdo sobre enemigo → seleccionar objetivo
+2. Enemigo seleccionado:
+
+   * Resaltado en color rojizo
+3. Presionar ESPACIO:
+
+   * Ataque automático dirigido (aimbot)
+4. Ataques:
+
+   * Animación de espada
+   * Efecto visual de corte
+   * Desaparece al impactar o por distancia
+
+---
+
+## 🛒 MERCADO
+
+* Integrado en la web principal
+* Permite:
+
+  * Compra/venta de objetos
+  * Transferencia de personajes entre cuentas (futuro)
+
+---
+
+## ⚙️ ESTADO ACTUAL DEL PROYECTO
+
+FASE 1 - BASE WEB
+
+✔ Estructura de carpetas creada
+✔ Página principal funcional (index.html)
+✔ Navegación hacia juego.html
+✔ Sistema básico de mercado (simulado)
+✔ Estilos base implementados
+
+---
+
+## 🔧 DECISIONES TÉCNICAS
+
+* HTML5 Canvas para el render del juego
+* JavaScript puro (sin frameworks por ahora)
+* Arquitectura modular (carpetas separadas por sistema)
+* Preparado para integración con WebSocket
+
+---
+
+## 🚀 ROADMAP INICIAL
+
+FASE 2:
+
+* Canvas del juego
+* Loop principal (engine)
+* Movimiento WASD
+
+FASE 3:
+
+* Sistema de cámara
+* Mundo base (tiles)
+
+FASE 4:
+
+* Sprites del jugador
+* Animaciones
+
+FASE 5:
+
+* Sistema de combate (target + ataque)
+
+FASE 6:
+
+* Backend en Render
+* Multiplayer básico (10 jugadores)
+
+---
+
+## ⚠️ REGLAS PARA DESARROLLO (IMPORTANTE PARA GEMINI)
+
+* NO modificar estructura de carpetas sin documentar
+* NO mezclar lógica del juego con lógica de la web
+* Cada cambio debe registrarse en CHANGELOG.md
+* Mantener código modular (no todo en un solo archivo)
+* Priorizar claridad sobre optimización en fases iniciales
+
+---
+
+## 📘 NOTAS FINALES
+
+Este proyecto está en fase inicial (Early Access).
+
+El objetivo actual es:
+
+* Construir una base sólida
+* Permitir pruebas con pocos jugadores
+* Escalar progresivamente sin rehacer el sistema
+
+---

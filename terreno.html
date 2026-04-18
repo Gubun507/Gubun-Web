@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Art Sandbox - Sky Blue Edition</title>
+    <style>
+        body {
+            margin: 0;
+            background: #87CEEB;
+            /* Fondo celeste para evitar destellos negros al cargar */
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 12px;
+            border: 2px solid #55a630;
+            color: #fff;
+            z-index: 100;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="ui">
+        <b>LIENZO PIXEL ART</b><br>
+        COORD: <span id="pos">0, 0</span><br>
+        <small>Terreno limpio para estructuras</small>
+    </div>
+
+    <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- CONFIGURACIÓN ---
+        const TILE_SIZE = 0.15;
+        const VIEW_DISTANCE = 50;
+        const SKY_COLOR = 0x87CEEB; // Celeste cielo
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(SKY_COLOR);
+
+        // Niebla: hace que los bloques lejanos se mezclen con el color del fondo
+        // para que el mapa parezca infinito y no se vea el borde negro.
+        scene.fog = new THREE.Fog(SKY_COLOR, 5, 12);
+
+        const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.01, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // --- SHADER DE PASTO PIXELADO ---
+        const grassShader = {
+            vertex: `
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            void main() {
+                vUv = uv;
+                vNormal = normal;
+                gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+            }
+        `,
+            fragment: `
+            varying vec2 vUv;
+            varying vec3 vNormal;
+            uniform vec3 uColor;
+            
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+
+            void main() {
+                vec3 color = uColor;
+                
+                // Ruido interno para simular detalle de briznas de pasto
+                float n = hash(floor(vUv * 10.0)); 
+                color += (n - 0.5) * 0.12;
+
+                // Sombreado de bordes para profundidad de rejilla
+                float border = 0.06;
+                if(vNormal.y > 0.5) {
+                    if(vUv.x < border || vUv.x > 1.0-border || vUv.y < border || vUv.y > 1.0-border) {
+                        color *= 0.85; 
+                    }
+                }
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `
+        };
+
+        const geometry = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE * 0.3, TILE_SIZE);
+
+        const grassMaterial = new THREE.ShaderMaterial({
+            uniforms: { uColor: { value: new THREE.Color(0x38b000) } },
+            vertexShader: grassShader.vertex,
+            fragmentShader: grassShader.fragment
+        });
+
+        const maxInstances = Math.pow(VIEW_DISTANCE * 2 + 1, 2);
+        const meshGrass = new THREE.InstancedMesh(geometry, grassMaterial, maxInstances);
+        scene.add(meshGrass);
+
+        // --- PERSONAJE ---
+        const playerObj = new THREE.Mesh(
+            new THREE.CapsuleGeometry(TILE_SIZE * 0.35, TILE_SIZE * 0.8, 4, 8),
+            new THREE.MeshBasicMaterial({ color: 0xff0044 })
+        );
+        scene.add(playerObj);
+
+        let player = { x: 0, z: 0 };
+        const keys = {};
+        const dummy = new THREE.Object3D();
+
+        function updateMap() {
+            let idx = 0;
+            const gX = Math.round(player.x / TILE_SIZE);
+            const gZ = Math.round(player.z / TILE_SIZE);
+
+            for (let x = -VIEW_DISTANCE; x <= VIEW_DISTANCE; x++) {
+                for (let z = -VIEW_DISTANCE; z <= VIEW_DISTANCE; z++) {
+                    const tx = gX + x;
+                    const tz = gZ + z;
+
+                    dummy.position.set(tx * TILE_SIZE, 0, tz * TILE_SIZE);
+                    dummy.updateMatrix();
+                    meshGrass.setMatrixAt(idx++, dummy.matrix);
+                }
+            }
+            meshGrass.instanceMatrix.needsUpdate = true;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const speed = 0.018;
+            if (keys['w'] || keys['W']) { player.x -= speed; player.z -= speed; }
+            if (keys['s'] || keys['S']) { player.x += speed; player.z += speed; }
+            if (keys['a'] || keys['A']) { player.x -= speed; player.z += speed; }
+            if (keys['d'] || keys['D']) { player.x += speed; player.z -= speed; }
+
+            playerObj.position.set(player.x, TILE_SIZE * 0.4, player.z);
+
+            camera.position.set(player.x + 4, 5, player.z + 4);
+            camera.lookAt(player.x, 0, player.z);
+
+            updateMap();
+            renderer.render(scene, camera);
+
+            document.getElementById('pos').innerText = `${Math.floor(player.x / TILE_SIZE)}, ${Math.floor(player.z / TILE_SIZE)}`;
+        }
+
+        window.onkeydown = e => keys[e.key] = true;
+        window.onkeyup = e => keys[e.key] = false;
+        animate();
+    </script>
+</body>
+
+</html>

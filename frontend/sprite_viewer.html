@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gubun — Visor de Sprites</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #080b14;
+      --surface: rgba(255,255,255,0.04);
+      --border:  rgba(139,92,246,0.3);
+      --purple:  #7c3aed;
+      --gold:    #f59e0b;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      background: linear-gradient(135deg, #fff 20%, #a78bfa 55%, #fbbf24 90%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 1rem;
+      background: rgba(7,10,18,0.9);
+      backdrop-filter: blur(16px);
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    .header a {
+      font-size: 0.8rem; color: var(--muted); text-decoration: none;
+      padding: 0.4rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
+    }
+    .header a:hover { color: var(--text); }
+
+    .layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 60px); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      background: rgba(7,10,18,0.6);
+    }
+
+    .sidebar h2 { font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--gold); margin-bottom: 1rem; letter-spacing: 0.1em; }
+
+    .char-selector { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+
+    .char-btn {
+      flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--muted);
+      cursor: pointer; font-size: 0.8rem; font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .char-btn.active { border-color: var(--purple); color: var(--text); background: rgba(124,58,237,0.15); }
+
+    .color-row { margin-bottom: 1rem; }
+    .color-row label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 0.35rem; }
+    .color-row input[type="color"] {
+      width: 100%; height: 32px; border: 1px solid var(--border); border-radius: 6px;
+      background: transparent; cursor: pointer; padding: 2px;
+    }
+
+    /* ── Main ── */
+    .main { padding: 2rem; overflow-y: auto; }
+
+    /* ── Live preview ── */
+    .live-preview {
+      background: #87CEEB;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3rem;
+      min-height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Pixel terrain in preview */
+    .live-preview::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 60px;
+      background: repeating-linear-gradient(90deg, #38b000 0px, #38b000 12px, #2d9200 12px, #2d9200 24px);
+    }
+
+    .preview-slot {
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      position: relative; z-index: 1;
+    }
+
+    .preview-canvas-wrap {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      background: transparent;
+    }
+
+    .preview-label {
+      font-size: 0.65rem; color: #1e293b; font-weight: 700;
+      background: rgba(255,255,255,0.8); padding: 0.15rem 0.5rem; border-radius: 4px;
+    }
+
+    .anim-controls {
+      display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;
+    }
+
+    .anim-btn {
+      padding: 0.45rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .anim-btn.active  { border-color: var(--purple); color: #a78bfa; background: rgba(124,58,237,0.12); }
+    .anim-btn.attack  { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .anim-btn.attack.active { border-color: #ef4444; background: rgba(239,68,68,0.12); }
+
+    /* ── Sprite sheet grid ── */
+    .section-title {
+      font-family: 'Cinzel', serif; font-size: 0.8rem;
+      color: var(--gold); letter-spacing: 0.1em;
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .frames-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .frame-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      transition: border-color 0.2s;
+    }
+    .frame-card:hover { border-color: rgba(124,58,237,0.5); }
+    .frame-card canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+    .frame-card .frame-label { font-size: 0.6rem; color: var(--muted); text-align: center; }
+    .frame-card .frame-num   { font-size: 0.7rem; color: var(--purple); font-weight: 600; }
+
+    .badge {
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.15rem 0.5rem; border-radius: 4px; margin-bottom: 0.25rem;
+    }
+    .badge-idle   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-walk   { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .badge-attack { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+    .speed-ctrl { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted); }
+    .speed-ctrl input { accent-color: var(--purple); width: 100px; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <h1>⚔️ GUBUN — Visor de Sprites</h1>
+  <a href="index.html">← Volver al juego</a>
+  <div style="margin-left:auto;font-size:0.72rem;color:var(--muted)">Personajes por partes · Paleta customizable</div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <h2>PERSONAJE</h2>
+    <div class="char-selector">
+      <button class="char-btn active" id="btnFemale" onclick="selectChar('female')">🧙 Maga</button>
+      <button class="char-btn"        id="btnMale"   onclick="selectChar('male')">⚔️ Guerrero</button>
+    </div>
+
+    <h2>🎨 COLORES</h2>
+    <div id="colorControls"></div>
+
+    <h2 style="margin-top:1.5rem">⏱ VELOCIDAD</h2>
+    <div class="speed-ctrl">
+      <input type="range" id="speedSlider" min="0.25" max="3" step="0.25" value="1">
+      <span id="speedLabel">1x</span>
+    </div>
+
+    <h2 style="margin-top:1.5rem">📦 EXPORTAR</h2>
+    <button onclick="exportCurrentFrame()" style="width:100%;padding:0.5rem;margin-top:0.5rem;background:rgba(124,58,237,0.15);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.8rem;">
+      💾 Frame actual como PNG
+    </button>
+    <button onclick="exportAllFrames()" style="width:100%;padding:0.5rem;margin-top:0.5rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.8rem;margin-bottom:1rem">
+      📋 Todos los frames (ZIP próximamente)
+    </button>
+  </aside>
+
+  <!-- ── Main content ── -->
+  <main class="main">
+
+    <!-- Live animated preview -->
+    <div class="live-preview">
+      <div class="preview-slot">
+        <div class="preview-canvas-wrap" id="previewWrap"></div>
+        <div class="preview-label" id="previewLabel">idle_front</div>
+      </div>
+    </div>
+
+    <!-- Animation buttons -->
+    <div class="anim-controls" id="animButtons"></div>
+
+    <!-- All frames display -->
+    <div id="allFrames"></div>
+  </main>
+</div>
+
+<script type="importmap">
+  { "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "./SpriteSystem.js": "./js/game/sprites/SpriteSystem.js",
+    "./FemaleMage.js":   "./js/game/sprites/characters/female/FemaleMage.js",
+    "./MaleWarrior.js":  "./js/game/sprites/characters/male/MaleWarrior.js"
+  }}
+</script>
+
+<script type="module">
+  import { CharacterSprite, PIXEL, FRAME_W, FRAME_H } from './js/game/sprites/SpriteSystem.js';
+  import { FEMALE_MAGE_DEF }  from './js/game/sprites/characters/female/FemaleMage.js';
+  import { MALE_WARRIOR_DEF } from './js/game/sprites/characters/male/MaleWarrior.js';
+
+  // ── State ──────────────────────────────────────────────
+  let currentDef  = FEMALE_MAGE_DEF;
+  let currentChar = null;
+  let currentAnim = 'idle_front';
+  let speedMult   = 1.0;
+  let lastTime    = 0;
+
+  // ── Build sprite ─────────────────────────────────────
+  function buildSprite(def, overrides = {}) {
+    const s = new CharacterSprite(def, overrides);
+    s.setAnimation(currentAnim);
+    return s;
+  }
+
+  // ── Render loop ───────────────────────────────────────
+  function loop(time) {
+    const dt = Math.min(time - lastTime, 50) * speedMult;
+    lastTime = time;
+
+    if (currentChar) {
+      currentChar.update(dt);
+      currentChar.render();
+
+      // Mirror preview canvas
+      const prev = document.getElementById('previewWrap');
+      if (prev.firstChild !== currentChar.canvas) {
+        prev.innerHTML = '';
+        currentChar.canvas.style.width  = `${FRAME_W * PIXEL * 2}px`;
+        currentChar.canvas.style.height = `${FRAME_H * PIXEL * 2}px`;
+        prev.appendChild(currentChar.canvas);
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ── Build all static frames display ──────────────────
+  function buildFrameGrid(def, overrides = {}) {
+    const container = document.getElementById('allFrames');
+    container.innerHTML = '';
+
+    const groups = {
+      idle:   ['idle_front','idle_back','idle_left'],
+      walk:   ['walk_front','walk_back','walk_left'],
+      attack: Object.keys(def.animations).filter(k => k.startsWith('atk_'))
+    };
+
+    const groupLabels = { idle: '🧍 IDLE', walk: '🚶 WALK', attack: '⚔️ ATAQUES' };
+    const groupBadge  = { idle: 'badge-idle', walk: 'badge-walk', attack: 'badge-attack' };
+
+    for (const [group, animKeys] of Object.entries(groups)) {
+      const t = document.createElement('div');
+      t.className = 'section-title';
+      t.textContent = groupLabels[group];
+      container.appendChild(t);
+
+      const grid = document.createElement('div');
+      grid.className = 'frames-grid';
+
+      for (const animKey of animKeys) {
+        const anim = def.animations[animKey];
+        if (!anim) continue;
+
+        anim.frames.forEach((fn, i) => {
+          const card    = document.createElement('div');
+          card.className = 'frame-card';
+
+          const badge   = document.createElement('div');
+          badge.className = `badge ${groupBadge[group]}`;
+          badge.textContent = anim.label || animKey;
+
+          const num     = document.createElement('div');
+          num.className = 'frame-num';
+          num.textContent = `Frame ${i}`;
+
+          const c  = document.createElement('canvas');
+          c.width  = FRAME_W * PIXEL;
+          c.height = FRAME_H * PIXEL;
+          c.style.width  = `${FRAME_W * PIXEL}px`;
+          c.style.height = `${FRAME_H * PIXEL}px`;
+
+          const ctx = c.getContext('2d');
+          const pal = { ...def.defaultPalette, ...overrides };
+          try { fn(ctx, pal); } catch(e) { console.warn(animKey, i, e); }
+
+          card.append(badge, c, num);
+          grid.appendChild(card);
+        });
+      }
+      container.appendChild(grid);
+    }
+  }
+
+  // ── Build animation buttons ────────────────────────
+  function buildAnimButtons(def) {
+    const wrap = document.getElementById('animButtons');
+    wrap.innerHTML = '';
+    for (const [key, anim] of Object.entries(def.animations)) {
+      const btn = document.createElement('button');
+      btn.className = 'anim-btn' + (key.startsWith('atk_') ? ' attack' : '') + (key === currentAnim ? ' active' : '');
+      btn.textContent = anim.label ?? key;
+      btn.onclick = () => {
+        currentAnim = key;
+        currentChar?.setAnimation(key);
+        document.getElementById('previewLabel').textContent = key;
+        wrap.querySelectorAll('.anim-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      wrap.appendChild(btn);
+    }
+  }
+
+  // ── Build color controls ───────────────────────────
+  function buildColorControls(def) {
+    const wrap = document.getElementById('colorControls');
+    wrap.innerHTML = '';
+    const overrides = {};
+
+    for (const part of def.customizableParts) {
+      if (part.linkedTo) continue; // skip auto-linked colors
+      const row = document.createElement('div');
+      row.className = 'color-row';
+
+      const lbl = document.createElement('label');
+      lbl.textContent = part.label;
+
+      const inp = document.createElement('input');
+      inp.type  = 'color';
+      inp.value = def.defaultPalette[part.key] ?? '#ffffff';
+      inp.addEventListener('input', () => {
+        overrides[part.key] = inp.value;
+        // Auto-adjust linked colors
+        for (const p2 of def.customizableParts) {
+          if (p2.linkedTo === part.key) {
+            overrides[p2.key] = adjustColor(inp.value, p2.darken ?? 0, p2.lighten ?? 0);
+          }
+        }
+        currentChar?.setColors(overrides);
+        buildFrameGrid(def, overrides);
+      });
+
+      row.append(lbl, inp);
+      wrap.appendChild(row);
+    }
+  }
+
+  // ── Simple color lightening/darkening ─────────────
+  function adjustColor(hex, darken = 0, lighten = 0) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    const f = 1 - darken + lighten;
+    const clamp = v => Math.min(255, Math.max(0, Math.round(v * f)));
+    return `#${clamp(r).toString(16).padStart(2,'0')}${clamp(g).toString(16).padStart(2,'0')}${clamp(b).toString(16).padStart(2,'0')}`;
+  }
+
+  // ── Character selector ─────────────────────────────
+  window.selectChar = function(which) {
+    currentDef = which === 'female' ? FEMALE_MAGE_DEF : MALE_WARRIOR_DEF;
+    document.getElementById('btnFemale').classList.toggle('active', which === 'female');
+    document.getElementById('btnMale').classList.toggle('active', which === 'male');
+    currentChar = buildSprite(currentDef);
+    buildAnimButtons(currentDef);
+    buildColorControls(currentDef);
+    buildFrameGrid(currentDef);
+  };
+
+  // ── Speed control ──────────────────────────────────
+  const slider = document.getElementById('speedSlider');
+  slider.addEventListener('input', () => {
+    speedMult = parseFloat(slider.value);
+    document.getElementById('speedLabel').textContent = `${speedMult}x`;
+  });
+
+  // ── Export ─────────────────────────────────────────
+  window.exportCurrentFrame = function() {
+    if (!currentChar) return;
+    const a = document.createElement('a');
+    a.href     = currentChar.exportFrame();
+    a.download = `${currentChar.def.id}_${currentAnim}_f${currentChar.frameIdx}.png`;
+    a.click();
+  };
+
+  window.exportAllFrames = function() {
+    alert('Export ZIP: próximamente. Por ahora usa el botón "Frame actual" para exportar frame por frame.');
+  };
+
+  // ── Init ───────────────────────────────────────────
+  currentChar = buildSprite(FEMALE_MAGE_DEF);
+  buildAnimButtons(FEMALE_MAGE_DEF);
+  buildColorControls(FEMALE_MAGE_DEF);
+  buildFrameGrid(FEMALE_MAGE_DEF);
+  requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>

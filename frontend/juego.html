@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jugando — Gubun MMORPG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Override body for fullscreen game */
+    body { overflow: hidden; background: #87CEEB; }
+
+    /* ── Game canvas container ──────────────────── */
+    #game-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    #game-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── HUD Layer (above canvas, below navbar) ── */
+    #hud {
+      position: fixed;
+      top: 56px; /* below navbar */
+      left: 0; right: 0; bottom: 0;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Glass panel base */
+    .hud-panel {
+      background: rgba(7, 10, 18, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 14px;
+      color: #e2e8f0;
+      font-family: 'Cinzel', serif;
+    }
+
+    /* ── Stats (top-left) ─────────────────────── */
+    #hud-stats {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      padding: 1rem 1.25rem;
+      min-width: 200px;
+    }
+
+    .hud-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fbbf24;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+    }
+
+    .hud-lbl { color: #64748b; text-transform: uppercase; }
+
+    .hud-val { color: #e2e8f0; font-weight: 700; }
+
+    .hud-bar-wrap {
+      margin: 0.3rem 0 0.7rem;
+    }
+
+    .hud-bar-lbl {
+      font-size: 0.58rem;
+      color: #64748b;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .hud-bar {
+      height: 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .hud-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-hp  { background: linear-gradient(90deg, #10b981, #34d399); width: 75%; }
+    .bar-mp  { background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 55%; }
+    .bar-xp  { background: linear-gradient(90deg, #f59e0b, #fbbf24); width: 30%; }
+
+    /* ── Coord (top-right) ─────────────────────── */
+    #hud-coord {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.65rem;
+      text-align: right;
+    }
+
+    #hud-coord .coord-label {
+      color: #64748b;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    #hud-coord #pos {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+
+    /* ── Controls hint (bottom-left) ─────────────── */
+    #hud-controls {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 1rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      line-height: 1.8;
+    }
+
+    .ctrl-key {
+      display: inline-block;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      padding: 0.05rem 0.35rem;
+      font-size: 0.55rem;
+      color: #94a3b8;
+      margin: 0 0.1rem;
+    }
+
+    /* ── Status bar (bottom-center) ─────────────── */
+    #hud-status {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.5rem 1.25rem;
+      font-size: 0.65rem;
+      color: #10b981;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      animation: blinkStatus 2s ease-in-out infinite;
+    }
+
+    @keyframes blinkStatus {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Navbar override for game page ───────────── */
+    .navbar {
+      background: rgba(7, 10, 18, 0.9) !important;
+      border-bottom-color: rgba(139, 92, 246, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Game Canvas ───────────────────────────────── -->
+  <div id="game-container"></div>
+
+  <!-- ── HUD Overlay ───────────────────────────────── -->
+  <div id="hud">
+
+    <!-- Stats panel (top-left) -->
+    <div id="hud-stats" class="hud-panel">
+      <div class="hud-title">⚔️ Gubun</div>
+
+      <div class="hud-bar-lbl">
+        <span>HP</span><span id="hp-val">75/100</span>
+      </div>
+      <div class="hud-bar"><div class="hud-bar-fill bar-hp" id="bar-hp"></div></div>
+
+      <div class="hud-bar-lbl" style="margin-top:0.4rem">
+        <span>MP</span><span id="mp-val">55/100</span>
+      </div>
+      <div class="hud-bar"><div class="hud-bar-fill bar-mp" id="bar-mp"></div></div>
+
+      <div class="hud-bar-lbl" style="margin-top:0.4rem">
+        <span>XP</span><span id="xp-val">30%</span>
+      </div>
+      <div class="hud-bar"><div class="hud-bar-fill bar-xp" id="bar-xp"></div></div>
+
+      <div class="hud-row" style="margin-top:0.8rem">
+        <span class="hud-lbl">Nivel</span>
+        <span class="hud-val">1</span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-lbl">Oro</span>
+        <span class="hud-val" style="color:#fbbf24">🪙 0</span>
+      </div>
+    </div>
+
+    <!-- Coordinates (top-right) -->
+    <div id="hud-coord" class="hud-panel">
+      <div class="coord-label">Coordenadas</div>
+      <div id="pos">0, 0</div>
+    </div>
+
+    <!-- Controls hint (bottom-left) -->
+    <div id="hud-controls" class="hud-panel">
+      <span class="ctrl-key">W</span><span class="ctrl-key">A</span><span class="ctrl-key">S</span><span class="ctrl-key">D</span> Mover<br>
+      <span class="ctrl-key">ESC</span> Menú
+    </div>
+
+    <!-- Status bar (bottom-center) -->
+    <div id="hud-status" class="hud-panel">
+      <span class="status-dot"></span>
+      Mundo activo · Fase 2 en desarrollo
+    </div>
+
+  </div>
+
+  <!-- ── Navbar (above HUD) ───────────────────────── -->
+  <nav class="navbar" id="navbar" style="z-index:200">
+    <a class="nav-brand" href="index.html">
+      <span class="brand-icon">⚔️</span>
+      <span class="brand-name">GUBUN</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">← Menú</a>
+      <a href="mercado.html">🛒 Mercado</a>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:#10b981;letter-spacing:0.1em">
+      🟢 EN LÍNEA
+    </div>
+  </nav>
+
+  <!-- ── Three.js Import Map ───────────────────────── -->
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  </script>
+
+  <!-- ── Game Engine ───────────────────────────────── -->
+  <script type="module">
+    import * as THREE from 'three';
+
+    // ═══════════════════════════════════════════════════
+    //  CONFIGURACIÓN
+    // ═══════════════════════════════════════════════════
+    const TILE_SIZE      = 0.15;
+    const VIEW_DISTANCE  = 50;
+    const SKY_COLOR      = 0x87CEEB;
+    const SPEED          = 0.018;
+
+    // ═══════════════════════════════════════════════════
+    //  SCENE SETUP
+    // ═══════════════════════════════════════════════════
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(SKY_COLOR);
+    scene.fog = new THREE.Fog(SKY_COLOR, 5, 12);
+
+    const camera = new THREE.PerspectiveCamera(
+      35,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      1000
+    );
+
+    const renderer = new THREE.WebGLRenderer({ antialias: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.getElementById('game-container').appendChild(renderer.domElement);
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ═══════════════════════════════════════════════════
+    //  ILUMINACIÓN
+    // ═══════════════════════════════════════════════════
+    scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+    const sun = new THREE.DirectionalLight(0xfff0cc, 0.6);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
+
+    // ═══════════════════════════════════════════════════
+    //  SHADER DE PASTO (pixel art con bordes)
+    // ═══════════════════════════════════════════════════
+    const grassShader = {
+      vertex: `
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        void main() {
+          vUv = uv;
+          vNormal = normal;
+          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragment: `
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        uniform vec3 uColor;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        void main() {
+          vec3 color = uColor;
+
+          // Variación de textura tipo briznas de pasto
+          float n = hash(floor(vUv * 10.0));
+          color += (n - 0.5) * 0.12;
+
+          // Bordes oscuros solo en cara superior (efecto de rejilla)
+          float border = 0.06;
+          if (vNormal.y > 0.5) {
+            if (vUv.x < border || vUv.x > 1.0 - border || vUv.y < border || vUv.y > 1.0 - border) {
+              color *= 0.82;
+            }
+          }
+
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    };
+
+    // Shader de tierra (para variaciones)
+    const dirtShader = {
+      vertex: grassShader.vertex,
+      fragment: `
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        uniform vec3 uColor;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        void main() {
+          vec3 color = uColor;
+          float n = hash(floor(vUv * 8.0));
+          color += (n - 0.5) * 0.08;
+
+          float border = 0.05;
+          if (vNormal.y > 0.5) {
+            if (vUv.x < border || vUv.x > 1.0 - border || vUv.y < border || vUv.y > 1.0 - border) {
+              color *= 0.78;
+            }
+          }
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    };
+
+    // ═══════════════════════════════════════════════════
+    //  GEOMETRÍAS & MATERIALES
+    // ═══════════════════════════════════════════════════
+    const tileH   = TILE_SIZE * 0.3;
+    const tileGeo = new THREE.BoxGeometry(TILE_SIZE, tileH, TILE_SIZE);
+
+    const grassMat = new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(0x38b000) } },
+      vertexShader:   grassShader.vertex,
+      fragmentShader: grassShader.fragment
+    });
+
+    const dirtMat = new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(0x8b5a2b) } },
+      vertexShader:   dirtShader.vertex,
+      fragmentShader: dirtShader.fragment
+    });
+
+    const maxTiles = Math.pow(VIEW_DISTANCE * 2 + 1, 2);
+
+    const meshGrass = new THREE.InstancedMesh(tileGeo, grassMat, maxTiles);
+    const meshDirt  = new THREE.InstancedMesh(tileGeo, dirtMat,  Math.floor(maxTiles * 0.12));
+    scene.add(meshGrass, meshDirt);
+
+    // ═══════════════════════════════════════════════════
+    //  GENERACIÓN DE MUNDO POR CHUNKS
+    // ═══════════════════════════════════════════════════
+    const CHUNK_SIZE = 24;
+    const worldData  = {};
+
+    function getTile(wx, wz) {
+      const cx = Math.floor(wx / CHUNK_SIZE);
+      const cz = Math.floor(wz / CHUNK_SIZE);
+      const key = `${cx},${cz}`;
+
+      if (!worldData[key]) {
+        worldData[key] = Array.from({ length: CHUNK_SIZE }, (_, lx) =>
+          Array.from({ length: CHUNK_SIZE }, (_, lz) => {
+            // Semilla determinista por posición (mismo chunk siempre igual)
+            const seed = Math.sin(cx * 1000 + lx + cz * 137 + lz * 31) * 43758.5453;
+            const r    = Math.abs(seed - Math.floor(seed));
+            return {
+              type: r > 0.90 ? 'dirt' : 'grass'
+            };
+          })
+        );
+      }
+
+      const lx = ((wx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+      const lz = ((wz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+      return worldData[key][lx][lz];
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  PERSONAJE
+    // ═══════════════════════════════════════════════════
+    const playerGroup = new THREE.Group();
+
+    // Cuerpo
+    const body = new THREE.Mesh(
+      new THREE.CapsuleGeometry(TILE_SIZE * 0.35, TILE_SIZE * 0.8, 4, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff2255 })
+    );
+    body.position.y = TILE_SIZE * 0.55;
+    playerGroup.add(body);
+
+    // Sombra proyectada en el suelo
+    const shadowMesh = new THREE.Mesh(
+      new THREE.CircleGeometry(TILE_SIZE * 0.38, 12),
+      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 })
+    );
+    shadowMesh.rotation.x = -Math.PI / 2;
+    shadowMesh.position.y = 0.001;
+    playerGroup.add(shadowMesh);
+
+    scene.add(playerGroup);
+
+    // ═══════════════════════════════════════════════════
+    //  ESTADO DEL JUEGO
+    // ═══════════════════════════════════════════════════
+    let player = { x: 0, z: 0 };
+    const keys = {};
+
+    window.addEventListener('keydown', e => { keys[e.key] = true;  e.preventDefault(); });
+    window.addEventListener('keyup',   e => { keys[e.key] = false; });
+
+    // ═══════════════════════════════════════════════════
+    //  ACTUALIZACIÓN DEL TERRENO
+    // ═══════════════════════════════════════════════════
+    const dummy = new THREE.Object3D();
+
+    function updateTerrain() {
+      let iGrass = 0;
+      let iDirt  = 0;
+
+      const gX = Math.round(player.x / TILE_SIZE);
+      const gZ = Math.round(player.z / TILE_SIZE);
+
+      for (let dx = -VIEW_DISTANCE; dx <= VIEW_DISTANCE; dx++) {
+        for (let dz = -VIEW_DISTANCE; dz <= VIEW_DISTANCE; dz++) {
+          const tx = gX + dx;
+          const tz = gZ + dz;
+          const tile = getTile(tx, tz);
+
+          dummy.position.set(tx * TILE_SIZE, 0, tz * TILE_SIZE);
+          dummy.updateMatrix();
+
+          if (tile.type === 'dirt' && iDirt < meshDirt.count) {
+            meshDirt.setMatrixAt(iDirt++, dummy.matrix);
+          } else if (iGrass < meshGrass.count) {
+            meshGrass.setMatrixAt(iGrass++, dummy.matrix);
+          }
+        }
+      }
+
+      // Ocultar instancias no usadas
+      dummy.position.set(0, -100, 0);
+      dummy.updateMatrix();
+      for (let i = iGrass; i < meshGrass.count; i++) meshGrass.setMatrixAt(i, dummy.matrix);
+      for (let i = iDirt;  i < meshDirt.count;  i++) meshDirt.setMatrixAt(i, dummy.matrix);
+
+      meshGrass.instanceMatrix.needsUpdate = true;
+      meshDirt.instanceMatrix.needsUpdate  = true;
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  LOOP PRINCIPAL
+    // ═══════════════════════════════════════════════════
+    const posEl = document.getElementById('pos');
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Movimiento isométrico
+      if (keys['w'] || keys['W']) { player.x -= SPEED; player.z -= SPEED; }
+      if (keys['s'] || keys['S']) { player.x += SPEED; player.z += SPEED; }
+      if (keys['a'] || keys['A']) { player.x -= SPEED; player.z += SPEED; }
+      if (keys['d'] || keys['D']) { player.x += SPEED; player.z -= SPEED; }
+
+      // Actualizar personaje
+      playerGroup.position.set(player.x, tileH * 0.5, player.z);
+
+      // Cámara isométrica que sigue al jugador
+      camera.position.set(player.x + 4, 5, player.z + 4);
+      camera.lookAt(player.x, 0, player.z);
+
+      updateTerrain();
+      renderer.render(scene, camera);
+
+      // HUD coord
+      if (posEl) {
+        posEl.textContent = `${Math.floor(player.x / TILE_SIZE)}, ${Math.floor(player.z / TILE_SIZE)}`;
+      }
+    }
+
+    animate();
+  </script>
+
+  <!-- ── Navbar scroll (from main.js but inline to avoid conflicts) ── -->
+  <script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar?.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+  </script>
+
+</body>
+</html>
